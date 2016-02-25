@@ -20,11 +20,13 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Logger;
+
+import hudson.tasks.Builder;
+import hudson.util.DescribableList;
+import org.jenkinsci.plugins.conditionalbuildstep.ConditionalBuilder;
+import org.jenkinsci.plugins.conditionalbuildstep.BuilderChain;
 
 public class TemplateUtils {
     private static final Logger LOG = Logger.getLogger("ez-templates");
@@ -70,6 +72,7 @@ public class TemplateUtils {
                 false,
                 false,
                 false,
+                true,
                 true
         );
         copy.addProperty(implProperty);
@@ -109,6 +112,8 @@ public class TemplateUtils {
             MatrixProject matrixProject = (MatrixProject) implementationProject;
             oldAxisList = matrixProject.getAxes();
         }
+
+        DescribableList<Builder, Descriptor<Builder>> oldBuilders = ((Project)implementationProject).getBuildersList();
 
         implementationProject = synchronizeConfigFiles(implementationProject, templateProject);
 
@@ -157,9 +162,41 @@ public class TemplateUtils {
         if (Jenkins.getInstance().getPlugin("promoted-builds") != null) {
             PromotedBuildsTemplateUtils.addPromotions(implementationProject, templateProject);
         }
-
+        UpdateBuilders(implementationProject, oldBuilders, property);
         ProjectUtils.silentSave(implementationProject);
     }
+
+    private static void UpdateBuilders(AbstractProject implementationProject, DescribableList<Builder, Descriptor<Builder>> oldbuilders, TemplateImplementationProperty property) throws IOException {
+        List<Builder> inheritanceOldBuilders = new ArrayList<Builder>();
+        for (Builder builder : oldbuilders) {
+            if (!property.getSyncConditionalStep() && (builder instanceof ConditionalBuilder || builder instanceof BuilderChain)) {
+                inheritanceOldBuilders.add(builder);
+            }
+        }
+        //List<Builder> inheritanceOldBuilders = getChildJobBuilders(oldbuilders);
+        if(inheritanceOldBuilders == null || inheritanceOldBuilders.size() == 0)
+            return;
+        final DescribableList<Builder, Descriptor<Builder>>  newBuilders = ((Project)implementationProject).getBuildersList();
+        List<Builder> inheritanceNewBuilders = getBuildersForSync(newBuilders, inheritanceOldBuilders);
+        newBuilders.replaceBy(inheritanceNewBuilders);
+    }
+
+    private static List<Builder> getBuildersForSync(DescribableList<Builder, Descriptor<Builder>> newBuilders, List<Builder> inheritanceOldBuilders) {
+        List<Builder> inheritanceNewBuilders = new ArrayList<Builder>();
+        int i = 0;
+        for (Builder builder : newBuilders) {
+            if(inheritanceOldBuilders.size() >= i) {
+                if (builder instanceof ConditionalBuilder || builder instanceof BuilderChain) {
+                    inheritanceNewBuilders.add(inheritanceOldBuilders.get(i));
+                    i++;
+                    continue;
+                }
+                inheritanceNewBuilders.add(builder);
+            }
+        }
+        return inheritanceNewBuilders;
+    }
+
 
     /**
      * Inlined from {@link MatrixProject#setAxes(hudson.matrix.AxisList)} except it doesn't call save.

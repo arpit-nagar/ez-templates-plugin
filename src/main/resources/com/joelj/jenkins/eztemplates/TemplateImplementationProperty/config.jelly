@@ -39,6 +39,9 @@
 			<f:entry field="syncAssignedLabel" title="${%Sync Assigned Label}">
 				<f:checkbox default="true" />
 			</f:entry>
+			<f:entry field="syncConditionalStep" title="${%Sync Conditional Step}">
+				<f:checkbox default="true" />
+			</f:entry>
 		</f:advanced>
 	</f:optionalBlock>
 </j:jelly>

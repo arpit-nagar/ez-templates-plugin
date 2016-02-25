@@ -28,9 +28,10 @@ public class TemplateImplementationProperty extends JobProperty<AbstractProject<
     private final boolean syncScm;
     private final boolean syncOwnership;
     private final boolean syncAssignedLabel;
+    private final boolean syncConditionalStep;
 
     @DataBoundConstructor
-    public TemplateImplementationProperty(String templateJobName, boolean syncMatrixAxis, boolean syncDescription, boolean syncBuildTriggers, boolean syncDisabled, boolean syncSecurity, boolean syncScm, boolean syncOwnership, boolean syncAssignedLabel) {
+    public TemplateImplementationProperty(String templateJobName, boolean syncMatrixAxis, boolean syncDescription, boolean syncBuildTriggers, boolean syncDisabled, boolean syncSecurity, boolean syncScm, boolean syncOwnership, boolean syncAssignedLabel, boolean syncConditionalStep) {
         this.templateJobName = templateJobName;
         this.syncMatrixAxis = syncMatrixAxis;
         this.syncDescription = syncDescription;
@@ -40,6 +41,7 @@ public class TemplateImplementationProperty extends JobProperty<AbstractProject<
         this.syncScm = syncScm;
         this.syncOwnership = syncOwnership;
         this.syncAssignedLabel = syncAssignedLabel;
+        this.syncConditionalStep = syncConditionalStep;
     }
 
     @Exported
@@ -82,6 +84,10 @@ public class TemplateImplementationProperty extends JobProperty<AbstractProject<
 
     public boolean getSyncAssignedLabel() {
         return syncAssignedLabel;
+    }
+
+    public boolean getSyncConditionalStep() {
+        return syncConditionalStep;
     }
 
     public AbstractProject findTemplate() {
